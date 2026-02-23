@@ -30,6 +30,6 @@ class HomePage extends StatelessWidget {
   }
 
   void _onScanButtonPressed(BuildContext context) {
-    context.push('/product', extra: '5000159484695');
+    context.push('/product', extra: '1234567890123'); //code barre du produit test (pas dans la bdd de base)
   }
 }

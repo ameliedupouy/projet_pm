@@ -5,6 +5,8 @@ import 'package:formation_flutter/screens/product/states/empty/product_page_empt
 import 'package:formation_flutter/screens/product/states/error/product_page_error.dart';
 import 'package:formation_flutter/screens/product/states/success/product_page_body.dart';
 import 'package:provider/provider.dart';
+import 'package:formation_flutter/screens/product/recall_fetcher.dart';
+import 'package:formation_flutter/screens/product/recall_banner.dart';
 
 class ProductPage extends StatelessWidget {
   const ProductPage({super.key, required this.barcode})
@@ -14,32 +16,60 @@ class ProductPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MaterialLocalizations materialLocalizations =
-        MaterialLocalizations.of(context);
-
-    return ChangeNotifierProvider<ProductFetcher>(
-      create: (_) => ProductFetcher(barcode: barcode),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ProductFetcher>(
+          create: (_) => ProductFetcher(barcode: barcode),
+        ),
+        ChangeNotifierProvider<RecallFetcher>(
+          create: (_) => RecallFetcher(barcode: barcode),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Stack(
           children: [
-            Consumer<ProductFetcher>(
-              builder: (BuildContext context, ProductFetcher notifier, _) {
-                return switch (notifier.state) {
-                  ProductFetcherLoading() => const ProductPageEmpty(),
-                  ProductFetcherError(error: var err) => ProductPageError(
-                    error: err,
+            Column(
+              children: [
+                Consumer<RecallFetcher>(
+                  builder: (context, recall, _) {
+                    return switch (recall.state) {
+                      RecallFetcherLoading() => const SizedBox.shrink(),
+                      RecallFetcherError(error: var erreur) =>
+                        const SizedBox.shrink(),
+                      RecallFetcherEmpty() => const SizedBox.shrink(),
+                      RecallFetcherSuccess(hasRecall: final hasRecall) =>
+                        hasRecall
+                            ? const RecallBanner( //bannière rouge produit rappelé
+                                label: "Ce produit fait l'objet d'un rappel",
+                              )
+                            : const SizedBox.shrink(),
+                    };
+                  },
+                ),
+
+                Expanded(
+                  child: Consumer<ProductFetcher>(
+                    builder:
+                        (BuildContext context, ProductFetcher notifier, _) {
+                          return switch (notifier.state) {
+                            ProductFetcherLoading() => const ProductPageEmpty(),
+                            ProductFetcherError(error: var erreur) =>
+                              ProductPageError(error: erreur),
+                            ProductFetcherSuccess() => ProductPageBody(),
+                          };
+                        },
                   ),
-                  ProductFetcherSuccess() => ProductPageBody(),
-                };
-              },
+                ),
+              ],
             ),
+
             PositionedDirectional(
               top: 0.0,
               start: 0.0,
               child: _HeaderIcon(
                 icon: AppIcons.close,
-                tooltip: materialLocalizations.closeButtonTooltip,
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: Navigator.of(context).pop,
               ),
             ),
@@ -48,7 +78,7 @@ class ProductPage extends StatelessWidget {
               end: 0.0,
               child: _HeaderIcon(
                 icon: AppIcons.share,
-                tooltip: materialLocalizations.shareButtonLabel,
+                tooltip: MaterialLocalizations.of(context).shareButtonLabel,
               ),
             ),
           ],
