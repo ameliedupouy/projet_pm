@@ -1,27 +1,23 @@
-console.log("HOOK FILE LOADED");
+console.log("fichier chargé");
 
-//modif pour check que la bdd marche, le temps n'est pas le bon
-cronAdd("sync_rappels", "* * * * *", () => {
+cronAdd("sync_rappels", "0 8,20 * * *", () => { 
 
-    console.log("CRON TRIGGERED"); //test 
+    console.log("cron ok");
 
     let collection;
 
     try {
         collection = $app.findCollectionByNameOrId("rappels_produits");
     } catch (err) {
-        console.log("Collection not ready");
+        console.log("Probleme de collection");
         return;
     }
 
     const res = $http.send({
-        url: "https://codelabs.formation-flutter.fr/assets/rappels.json", 
+        url: "https://codelabs.formation-flutter.fr/assets/rappels.json",
         method: "GET",
         timeout: 30,
     });
-
-    console.log("Status:", res.statusCode); //test
-    console.log("Items:", Array.isArray(res.json) ? res.json.length : res.json); //test
 
     if (res.statusCode !== 200) {
         console.log("Fetch error:", res.statusCode);
@@ -73,5 +69,5 @@ cronAdd("sync_rappels", "* * * * *", () => {
         }
     });
 
-    console.log("SYNC DONE"); //test synchro
+    console.log("synchro ok");
 });
