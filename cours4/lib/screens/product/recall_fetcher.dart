@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
+import 'package:formation_flutter/model/recall.dart';
 
 sealed class RecallFetcherState {}
 
@@ -14,7 +15,8 @@ class RecallFetcherEmpty extends RecallFetcherState {}
 
 class RecallFetcherSuccess extends RecallFetcherState {  //si un rappel est trouvé
   final bool hasRecall;
-  RecallFetcherSuccess(this.hasRecall);
+  final Recall? recall;
+  RecallFetcherSuccess(this.hasRecall, this.recall);
 }
 
 class RecallFetcher extends ChangeNotifier {
@@ -43,7 +45,7 @@ class RecallFetcher extends ChangeNotifier {
       final hasRecall = result.items.isNotEmpty;
 
       if (hasRecall) {
-        _state = RecallFetcherSuccess(true);
+        _state = RecallFetcherSuccess(true, Recall.fromRecord(result.items.first));
       } else {
         _state = RecallFetcherEmpty();
       }
