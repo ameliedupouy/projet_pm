@@ -31,23 +31,6 @@ class ProductPage extends StatelessWidget {
           children: [
             Column(
               children: [
-                Consumer<RecallFetcher>(
-                  builder: (context, recall, _) {
-                    return switch (recall.state) {
-                      RecallFetcherLoading() => const SizedBox.shrink(),
-                      RecallFetcherError(error: var erreur) =>
-                        const SizedBox.shrink(),
-                      RecallFetcherEmpty() => const SizedBox.shrink(),
-                      RecallFetcherSuccess(hasRecall: final hasRecall) =>
-                        hasRecall
-                            ? const RecallBanner( //bannière rouge produit rappelé
-                                label: "Ce produit fait l'objet d'un rappel",
-                              )
-                            : const SizedBox.shrink(),
-                    };
-                  },
-                ),
-
                 Expanded(
                   child: Consumer<ProductFetcher>(
                     builder:

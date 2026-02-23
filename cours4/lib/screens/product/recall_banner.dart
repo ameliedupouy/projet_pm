@@ -26,6 +26,10 @@ class RecallBanner extends StatelessWidget {
               ),
             ),
           ),
+          const Icon(
+            Icons.arrow_forward,
+            color: Color(0xFFA60000)
+          ),
         ],
       ),
     );

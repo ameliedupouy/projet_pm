@@ -9,6 +9,8 @@ import 'package:formation_flutter/screens/product/states/success/tabs/product_ta
 import 'package:formation_flutter/screens/product/states/success/tabs/product_tab2.dart';
 import 'package:formation_flutter/screens/product/states/success/tabs/product_tab3.dart';
 import 'package:provider/provider.dart';
+import 'package:formation_flutter/screens/product/recall_fetcher.dart';
+import 'package:formation_flutter/screens/product/recall_banner.dart';
 
 class ProductPageBody extends StatefulWidget {
   const ProductPageBody({super.key});
@@ -71,23 +73,45 @@ class _ProductPageBodyState extends State<ProductPageBody> {
   }
 
   Widget _getBody() {
-    return Stack(
-      children: <Widget>[
-        Offstage(
-          offstage: _tab != ProductDetailsCurrentTab.summary,
-          child: ProductTab0(),
+    return Column(
+      children: [
+        Consumer<RecallFetcher>(
+          builder: (context, recall, _) {
+            return switch (recall.state) {
+              RecallFetcherLoading() => const SizedBox.shrink(),
+              RecallFetcherError(error: var erreur) => const SizedBox.shrink(),
+              RecallFetcherEmpty() => const SizedBox.shrink(),
+              RecallFetcherSuccess(hasRecall: final hasRecall) =>
+                hasRecall
+                    ? const RecallBanner(
+                        //bannière rouge produit rappelé
+                        label: "Ce produit fait l'objet d'un rappel",
+                      )
+                    : const SizedBox.shrink(),
+            };
+          },
         ),
-        Offstage(
-          offstage: _tab != ProductDetailsCurrentTab.info,
-          child: ProductTab1(),
-        ),
-        Offstage(
-          offstage: _tab != ProductDetailsCurrentTab.nutrition,
-          child: ProductTab2(),
-        ),
-        Offstage(
-          offstage: _tab != ProductDetailsCurrentTab.nutritionalValues,
-          child: ProductTab3(),
+        Expanded(
+          child: Stack(
+            children: <Widget>[
+              Offstage(
+                offstage: _tab != ProductDetailsCurrentTab.summary,
+                child: ProductTab0(),
+              ),
+              Offstage(
+                offstage: _tab != ProductDetailsCurrentTab.info,
+                child: ProductTab1(),
+              ),
+              Offstage(
+                offstage: _tab != ProductDetailsCurrentTab.nutrition,
+                child: ProductTab2(),
+              ),
+              Offstage(
+                offstage: _tab != ProductDetailsCurrentTab.nutritionalValues,
+                child: ProductTab3(),
+              ),
+            ],
+          ),
         ),
       ],
     );
