@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 !/.claude/
+
+# PocketBase
+pocketbase
+pocketbase.exe
+pb_data/
