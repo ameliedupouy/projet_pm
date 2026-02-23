@@ -1,6 +1,6 @@
 console.log("fichier chargé");
 
-cronAdd("sync_rappels", "0 8,20 * * *", () => { 
+cronAdd("sync_rappels", "* * * * *", () => { 
 
     console.log("cron ok");
 
