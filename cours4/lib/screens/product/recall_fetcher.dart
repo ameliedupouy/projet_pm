@@ -13,7 +13,8 @@ class RecallFetcherError extends RecallFetcherState {
 
 class RecallFetcherEmpty extends RecallFetcherState {}
 
-class RecallFetcherSuccess extends RecallFetcherState {  //si un rappel est trouvé
+class RecallFetcherSuccess extends RecallFetcherState {
+  //si un rappel est trouvé
   final bool hasRecall;
   final Recall? recall;
   RecallFetcherSuccess(this.hasRecall, this.recall);
@@ -29,27 +30,26 @@ class RecallFetcher extends ChangeNotifier {
   RecallFetcherState _state = RecallFetcherLoading();
   RecallFetcherState get state => _state;
 
-  final PocketBase pb = PocketBase('http://127.0.0.1:8090');
+  final PocketBase pb = PocketBase('http://localhost:8090'); //test avec localhost pcq tout bug 
 
   Future<void> _fetchRecall() async {
     try {
       _state = RecallFetcherLoading();
       notifyListeners();
 
-      final result = await pb.collection('rappels_produits').getList(
-            page: 1,
-            perPage: 1,
-            filter: 'gtin="$barcode"',
-          );
+      final result = await pb
+          .collection('rappels_produits')
+          .getList(page: 1, perPage: 1, filter: 'gtin="$barcode"');
 
       final hasRecall = result.items.isNotEmpty;
-
       if (hasRecall) {
-        _state = RecallFetcherSuccess(true, Recall.fromRecord(result.items.first));
+        _state = RecallFetcherSuccess(
+          true,
+          Recall.fromRecord(result.items.first),
+        );
       } else {
         _state = RecallFetcherEmpty();
       }
-
       notifyListeners();
     } catch (e) {
       _state = RecallFetcherError(e);

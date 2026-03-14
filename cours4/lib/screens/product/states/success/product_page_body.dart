@@ -42,8 +42,23 @@ class _ProductPageBodyState extends State<ProductPageBody> {
             child: CustomScrollView(
               slivers: <Widget>[
                 ProductPageHeader(),
+                SliverToBoxAdapter(
+                  child: Consumer<RecallFetcher>(
+                    builder: (context, recallFetcher, _) {
+                      final state = recallFetcher.state;
+
+                      if (state is RecallFetcherSuccess && state.hasRecall) {
+                        return const RecallBanner(
+                          label: "Ce produit fait l'objet d'un rappel",
+                        );
+                      }
+
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
                 SliverPadding(
-                  padding: EdgeInsetsDirectional.only(top: 10.0),
+                  padding: const EdgeInsetsDirectional.only(top: 10.0),
                   sliver: SliverFillRemaining(
                     fillOverscroll: true,
                     hasScrollBody: false,
@@ -73,45 +88,23 @@ class _ProductPageBodyState extends State<ProductPageBody> {
   }
 
   Widget _getBody() {
-    return Column(
-      children: [
-        Consumer<RecallFetcher>(
-          builder: (context, recall, _) {
-            return switch (recall.state) {
-              RecallFetcherLoading() => const SizedBox.shrink(),
-              RecallFetcherError(error: var erreur) => const SizedBox.shrink(),
-              RecallFetcherEmpty() => const SizedBox.shrink(),
-              RecallFetcherSuccess(hasRecall: final hasRecall) =>
-                hasRecall
-                    ? const RecallBanner(
-                        //bannière rouge produit rappelé
-                        label: "Ce produit fait l'objet d'un rappel",
-                      )
-                    : const SizedBox.shrink(),
-            };
-          },
+    return Stack(
+      children: <Widget>[
+        Offstage(
+          offstage: _tab != ProductDetailsCurrentTab.summary,
+          child: ProductTab0(),
         ),
-        Expanded(
-          child: Stack(
-            children: <Widget>[
-              Offstage(
-                offstage: _tab != ProductDetailsCurrentTab.summary,
-                child: ProductTab0(),
-              ),
-              Offstage(
-                offstage: _tab != ProductDetailsCurrentTab.info,
-                child: ProductTab1(),
-              ),
-              Offstage(
-                offstage: _tab != ProductDetailsCurrentTab.nutrition,
-                child: ProductTab2(),
-              ),
-              Offstage(
-                offstage: _tab != ProductDetailsCurrentTab.nutritionalValues,
-                child: ProductTab3(),
-              ),
-            ],
-          ),
+        Offstage(
+          offstage: _tab != ProductDetailsCurrentTab.info,
+          child: ProductTab1(),
+        ),
+        Offstage(
+          offstage: _tab != ProductDetailsCurrentTab.nutrition,
+          child: ProductTab2(),
+        ),
+        Offstage(
+          offstage: _tab != ProductDetailsCurrentTab.nutritionalValues,
+          child: ProductTab3(),
         ),
       ],
     );
@@ -129,11 +122,13 @@ enum ProductDetailsCurrentTab {
   final IconData icon;
 
   String label(AppLocalizations appLocalizations) => switch (this) {
-    ProductDetailsCurrentTab.summary => appLocalizations.product_tab_summary,
-    ProductDetailsCurrentTab.info => appLocalizations.product_tab_properties,
-    ProductDetailsCurrentTab.nutrition =>
-      appLocalizations.product_tab_nutrition,
-    ProductDetailsCurrentTab.nutritionalValues =>
-      appLocalizations.product_tab_nutrition_facts,
-  };
+        ProductDetailsCurrentTab.summary =>
+          appLocalizations.product_tab_summary,
+        ProductDetailsCurrentTab.info =>
+          appLocalizations.product_tab_properties,
+        ProductDetailsCurrentTab.nutrition =>
+          appLocalizations.product_tab_nutrition,
+        ProductDetailsCurrentTab.nutritionalValues =>
+          appLocalizations.product_tab_nutrition_facts,
+      };
 }

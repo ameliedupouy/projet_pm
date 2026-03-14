@@ -9,7 +9,7 @@ class PocketBaseService {
   }
 
   PocketBaseService._internal() {
-    client = PocketBase('http://127.0.0.1:8090'); // serveur local de pocketbase
+    client = PocketBase('http://127.0.0.1:8090'); //serveur local 
   }
 
   Future<List<Map<String, dynamic>>> getRappels() async { //récup les rappels produits
@@ -17,7 +17,7 @@ class PocketBaseService {
       final result = await client.collection('rappels_produits').getFullList();
       return result.map((record) => record.data).toList();
     } catch (e) {
-      print('Erreur PocketBase: $e');
+      print('Erreur PocketBase: $e'); //test
       return [];
     }
   }
