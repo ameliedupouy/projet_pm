@@ -65,6 +65,16 @@ cronAdd("sync_rappels", "* * * * *", () => {
             record.set("date_de_fin_de_la_procedure_de_rappel", item.date_de_fin_de_la_procedure_de_rappel);
             record.set("actif", actif);
 
+            //ajout pour la fiche de rappel
+            record.set("date_debut_commercialisation", item.date_debut_commercialisation || "");
+            record.set("date_fin_commercialisation", item.date_date_fin_commercialisation || "");
+            record.set("distributeurs", item.distributeurs || "");
+            record.set("zone_geographique_de_vente", item.zone_geographique_de_vente || "");
+            record.set("risques_encourus", item.risques_encourus || "");
+            record.set("preconisations_sanitaires", item.preconisations_sanitaires || "");
+            record.set("conduites_a_tenir_par_le_consommateur", item.conduites_a_tenir_par_le_consommateur || "");
+            record.set("lien_vers_affichette_pdf", item.lien_vers_affichette_pdf || "");
+
             txApp.save(record);
         }
     });

@@ -7,7 +7,7 @@ import 'package:formation_flutter/screens/product/product_page.dart';
 import 'package:formation_flutter/screens/product/recall_details_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:formation_flutter/model/recall.dart';
-import 'package:formation_flutter/screens/product/recall_details_page.dart';
+import 'package:formation_flutter/model/product.dart'; // ✅ AJOUTE CETTE LIGNE
 
 void main() {
   runApp(const MyApp());
@@ -23,8 +23,17 @@ GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/recall',
-      builder: (_, GoRouterState state) =>
-          RecallDetailsPage(recall: state.extra as Recall),
+      builder: (_, GoRouterState state) {
+        final extras = state.extra as Map<String, dynamic>;
+        
+        final recall = extras['recall'] as Recall;
+        final product = extras['product'] as Product?;
+        
+        return RecallDetailsPage(
+          recall: recall,
+          product: product,
+        );
+      }
     )
   ],
 );
