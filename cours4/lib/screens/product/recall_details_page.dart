@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:formation_flutter/model/recall.dart';
 import 'package:formation_flutter/model/product.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:formation_flutter/res/app_icons.dart';
 
 class RecallDetailsPage extends StatelessWidget {
   const RecallDetailsPage({
@@ -137,26 +138,17 @@ class _RecallAppBar extends StatelessWidget {
       ),
       centerTitle: false,
       actions: [
+      if (recall.urlPdf != null && recall.urlPdf!.isNotEmpty) //verif que le pdf existe
         IconButton(
-          icon: const Icon(Icons.share, color: Color(0xFF1A237E)),
-          onPressed: () => _shareRecall(context),
-          tooltip: 'Partager',
+          icon: Transform.scale(
+            scaleX : -1, //reverse la flèche
+            child: const Icon(AppIcons.share, color: Color(0xFF1A237E)),
+          ),
+            onPressed: () => _openPdf(recall.urlPdf!), //fiche pdf
+          tooltip: 'Ouvrir la fiche PDF',
         ),
         
-        //pdf si existe
-        if (recall.urlPdf != null && recall.urlPdf!.isNotEmpty)
-          IconButton(
-            icon: const Icon(Icons.open_in_new, color: Color(0xFF1A237E)),
-            onPressed: () => _openPdf(recall.urlPdf!),
-            tooltip: 'Ouvrir la fiche PDF',
-          ),
       ],
-    );
-  }
-
-  void _shareRecall(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Partage en construction')),
     );
   }
 
