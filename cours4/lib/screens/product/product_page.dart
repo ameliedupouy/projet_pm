@@ -7,22 +7,29 @@ import 'package:formation_flutter/screens/product/states/success/product_page_bo
 import 'package:provider/provider.dart';
 import 'package:formation_flutter/screens/product/recall_fetcher.dart';
 import 'package:formation_flutter/screens/product/recall_banner.dart';
+import 'package:go_router/go_router.dart';
 
-class ProductPage extends StatelessWidget {
+class ProductPage extends StatefulWidget {
   const ProductPage({super.key, required this.barcode})
     : assert(barcode.length > 0);
-
   final String barcode;
+
+  @override
+  State<ProductPage> createState() => _ProductPageState();
+}
+
+class _ProductPageState extends State<ProductPage> {
+  bool _isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<ProductFetcher>(
-          create: (_) => ProductFetcher(barcode: barcode),
+          create: (_) => ProductFetcher(barcode: widget.barcode),
         ),
         ChangeNotifierProvider<RecallFetcher>(
-          create: (_) => RecallFetcher(barcode: barcode),
+          create: (_) => RecallFetcher(barcode: widget.barcode),
         ),
       ],
       child: Scaffold(
@@ -46,7 +53,6 @@ class ProductPage extends StatelessWidget {
                 ),
               ],
             ),
-
             PositionedDirectional(
               top: 0.0,
               start: 0.0,
@@ -60,8 +66,23 @@ class ProductPage extends StatelessWidget {
               top: 0.0,
               end: 0.0,
               child: _HeaderIcon(
-                icon: AppIcons.share,
-                tooltip: MaterialLocalizations.of(context).shareButtonLabel,
+                icon: _isFavorite ? Icons.star : Icons.star_outline,
+                tooltip: _isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris', //en attendant d'enregistrer les favoris
+                onPressed: () {
+                  setState(() {
+                    _isFavorite = !_isFavorite;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        _isFavorite
+                            ? 'Produit ajouté aux favoris'
+                            : 'Produit retiré des favoris',
+                      ),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -74,7 +95,6 @@ class ProductPage extends StatelessWidget {
 class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon({required this.icon, required this.tooltip, this.onPressed})
     : assert(tooltip.length > 0);
-
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
