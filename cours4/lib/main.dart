@@ -12,7 +12,8 @@ import 'package:formation_flutter/service/auth_service.dart';
 import 'package:formation_flutter/screens/auth/login_page.dart';
 import 'package:formation_flutter/screens/auth/signup_page.dart';
 import 'package:provider/provider.dart';
-
+import 'package:formation_flutter/screens/scanner/scanner_page.dart';
+import 'package:formation_flutter/screens/favorites/favorites_page.dart';
 void main() async {
   final authService = AuthService(); // vérif l'authentification 
   await authService.checkAuthStatus();
@@ -57,6 +58,14 @@ GoRouter _buildRouter(AuthService authService) {
         path: '/signup',
         builder: (_, _) => const SignupPage(),
       ),
+      GoRoute(
+        path: '/scanner',
+        builder: (_, _) => const ScannerPage(),
+      ),
+      GoRoute(
+        path: '/favorites',
+        builder: (_, _) => const FavoritesPage(),
+      )
     ],
     
     redirect: (BuildContext context, GoRouterState state) {

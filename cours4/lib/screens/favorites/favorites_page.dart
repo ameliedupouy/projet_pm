@@ -1,106 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:formation_flutter/l10n/app_localizations.dart';
-import 'package:formation_flutter/res/app_icons.dart';
-import 'package:formation_flutter/screens/homepage/homepage_empty.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:formation_flutter/service/auth_service.dart';
+import 'package:formation_flutter/api/open_food_facts_api.dart';
 import 'package:formation_flutter/model/product.dart';
 import 'package:formation_flutter/res/app_colors.dart';
-import 'package:formation_flutter/service/scan_service.dart';
+import 'package:formation_flutter/service/auth_service.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class FavoritesPage extends StatefulWidget {
+  const FavoritesPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<FavoritesPage> createState() => _FavoritesPageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late Future<List<ScanRecord>> _scanHistory;
+class _FavoritesPageState extends State<FavoritesPage> {
+  late Future<List<FavoriteItem>> _favorites;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _loadFavorites();
   }
 
-  void _loadHistory() {
+  void _loadFavorites() {
     final authService = context.read<AuthService>();
     setState(() {
-      _scanHistory = ScanService(authService).getScanHistory();
+      _favorites = _getFavorites(authService);
     });
   }
 
-  void _onScanButtonPressed(BuildContext context) {
-    context.push('/scanner').then((_) {
-      _loadHistory();
-    });
+  Future<List<FavoriteItem>> _getFavorites(AuthService authService) async {
+    try {
+      final pb = authService.pb;
+      final records = await pb.collection('favorites').getFullList(
+        filter: 'userId = "${pb.authStore.model.id}"',
+      );
+
+      final favorites = <FavoriteItem>[];
+
+      for (final record in records) { //reucp les infos du produit dans l'api
+        final barcode = record.getStringValue('barcode');
+        try {
+          final product = await OpenFoodFactsAPI().getProduct(barcode);
+          favorites.add(
+            FavoriteItem(
+              barcode: barcode,
+              productName: product.name,
+              brands: product.brands,
+              picture: product.picture,
+              nutriScore: product.nutriScore,
+            ),
+          );
+        } catch (e) {
+          favorites.add( //si l'api crash
+            FavoriteItem(
+              barcode: barcode,
+              productName: 'Produit inconnu',
+            ),
+          );
+        }
+      }
+
+      return favorites;
+    } catch (e) {
+      throw Exception('Erreur: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations localizations = AppLocalizations.of(context)!;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.my_scans_screen_title),
-        centerTitle: false,
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.star),
-            tooltip: 'Favoris',
-            onPressed: () {
-              context.push('/favorites');
-            },
-          ),
-          IconButton(
-            icon: Padding(
-              padding: const EdgeInsetsDirectional.only(end: 8.0),
-              child: Icon(AppIcons.barcode),
-            ),
-            tooltip: 'Scanner',
-            onPressed: () {
-              context.push('/scanner').then((_) {
-                _loadHistory();
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            tooltip: 'Déconnexion',
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Déconnexion'),
-                  content: const Text(
-                    'Êtes-vous sûr de vouloir vous déconnecter ?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Annuler'),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await context.read<AuthService>().logout();
-                        if (context.mounted) {
-                          context.go('/login');
-                        }
-                      },
-                      child: const Text('Se déconnecter'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+        title: const Text('Mes favoris'),
       ),
-      body: FutureBuilder<List<ScanRecord>>(
-        future: _scanHistory,
+      body: FutureBuilder<List<FavoriteItem>>(
+        future: _favorites,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -108,7 +82,7 @@ class _HomePageState extends State<HomePage> {
             );
           }
 
-          if (snapshot.hasError) {
+          if (snapshot.hasError) { //si erreur
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -124,7 +98,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: _loadHistory,
+                    onPressed: _loadFavorites,
                     child: const Text('Réessayer'),
                   ),
                 ],
@@ -132,25 +106,23 @@ class _HomePageState extends State<HomePage> {
             );
           }
 
-          final scans = snapshot.data ?? [];
+          final favorites = snapshot.data ?? [];
 
-          if (scans.isEmpty) { //page vide si pas de scan
-            return HomePageEmpty(
-              onScan: () {
-                _onScanButtonPressed(context);
-              },
+          if (favorites.isEmpty) { //page vide si pas de favoris
+            return const Center(
+              child: Text('Aucun favori pour le moment'),
             );
           }
 
-          return ListView.builder(
+          return ListView.builder( //liste des favoris
             padding: const EdgeInsets.all(12),
-            itemCount: scans.length,
+            itemCount: favorites.length,
             itemBuilder: (context, index) {
-              final scan = scans[index];
-              return _ScanCard(
-                scan: scan,
+              final favorite = favorites[index];
+              return _FavoriteCard(
+                favorite: favorite,
                 onTap: () {
-                  context.push('/product', extra: scan.barcode);
+                  context.push('/product', extra: favorite.barcode);
                 },
               );
             },
@@ -161,29 +133,45 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _ScanCard extends StatelessWidget {
-  const _ScanCard({
-    required this.scan,
+class FavoriteItem { //données d'un favori
+  final String barcode;
+  final String? productName;
+  final List<String>? brands;
+  final String? picture;
+  final ProductNutriScore? nutriScore;
+
+  FavoriteItem({
+    required this.barcode,
+    this.productName,
+    this.brands,
+    this.picture,
+    this.nutriScore,
+  });
+}
+
+class _FavoriteCard extends StatelessWidget {
+  const _FavoriteCard({
+    required this.favorite,
     required this.onTap,
   });
 
-  final ScanRecord scan;
+  final FavoriteItem favorite;
   final VoidCallback onTap;
 
-  Color _getNutriscoreColor(ProductNutriScore? score) {
+  Color _getNutriscoreColor(ProductNutriScore? score) { //couleur nutriscore
     return switch (score) {
       ProductNutriScore.A => const Color(0xFF2E7D32),
-      ProductNutriScore.B => const Color(0xFF6FA500), 
-      ProductNutriScore.C => const Color(0xFFFFC107),
+      ProductNutriScore.B => const Color(0xFF6FA500),
+      ProductNutriScore.C => const Color(0xFFFFC107), 
       ProductNutriScore.D => const Color(0xFFFF9800), 
       ProductNutriScore.E => const Color(0xFFC62828), 
-      ProductNutriScore.unknown => const Color(0xFF999999), 
-      null => const Color(0xFF999999), 
+      ProductNutriScore.unknown => const Color(0xFF999999),
+      null => const Color(0xFF999999),
     };
   }
 
-  String _getNutriscoreLetter(ProductNutriScore? score) {
-    return switch (score) {
+  String _getNutriscoreLetter(ProductNutriScore? score) { //lettre du nutriscore
+    return switch (score) { 
       ProductNutriScore.A => 'A',
       ProductNutriScore.B => 'B',
       ProductNutriScore.C => 'C',
@@ -195,8 +183,8 @@ class _ScanCard extends StatelessWidget {
   }
 
   String _getFirstBrand() {
-    return scan.brands?.isNotEmpty ?? false
-        ? scan.brands!.first
+    return favorite.brands?.isNotEmpty ?? false
+        ? favorite.brands!.first
         : 'Marque inconnue';
   }
 
@@ -210,16 +198,17 @@ class _ScanCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Container(
+              Container( //photo du produit
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
                   color: AppColors.grey1,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: scan.picture != null && scan.picture!.isNotEmpty
+                child: favorite.picture != null &&
+                        favorite.picture!.isNotEmpty
                     ? Image.network(
-                        scan.picture!,
+                        favorite.picture!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(Icons.image,
@@ -230,12 +219,12 @@ class _ScanCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              Expanded(
+              Expanded( //info du produit
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      scan.productName ?? 'Produit inconnu',
+                      favorite.productName ?? 'Produit inconnu',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -263,13 +252,13 @@ class _ScanCard extends StatelessWidget {
                           width: 12,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: _getNutriscoreColor(scan.nutriScore),
+                            color: _getNutriscoreColor(favorite.nutriScore),
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Nutriscore : ${_getNutriscoreLetter(scan.nutriScore)}',
+                          'Nutriscore : ${_getNutriscoreLetter(favorite.nutriScore)}',
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.grey2,

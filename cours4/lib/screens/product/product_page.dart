@@ -6,12 +6,13 @@ import 'package:formation_flutter/screens/product/states/error/product_page_erro
 import 'package:formation_flutter/screens/product/states/success/product_page_body.dart';
 import 'package:provider/provider.dart';
 import 'package:formation_flutter/screens/product/recall_fetcher.dart';
-import 'package:formation_flutter/screens/product/recall_banner.dart';
-import 'package:go_router/go_router.dart';
+import 'package:formation_flutter/service/auth_service.dart';
+import 'package:formation_flutter/service/favorite_service.dart';
+
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key, required this.barcode})
-    : assert(barcode.length > 0);
+      : assert(barcode.length > 0);
   final String barcode;
 
   @override
@@ -19,7 +20,58 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
-  bool _isFavorite = false;
+  late bool _isFavorite = false;
+  late FavoriteService _favoriteService;
+
+  @override
+  void initState() {
+    super.initState();
+    _favoriteService = FavoriteService(context.read<AuthService>());
+    _checkFavoriteStatus();
+  }
+
+  void _checkFavoriteStatus() async { //check si le produit est en favori
+    try {
+      final isFav = await _favoriteService.isFavorite(widget.barcode);
+      setState(() {
+        _isFavorite = isFav;
+      });
+    } catch (e) {
+      print('Erreur lors de la vérification des favoris: $e');
+    }
+  }
+
+  void _toggleFavorite() async { //ajout/suppr 
+    try {
+      if (_isFavorite) {
+        await _favoriteService.removeFavorite(widget.barcode);
+      } else {
+        await _favoriteService.addFavorite(widget.barcode);
+      }
+
+      setState(() {
+        _isFavorite = !_isFavorite;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isFavorite
+                ? 'Ajouté aux favoris'
+                : 'Retiré des favoris',
+          ),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: ${e.toString()}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +94,13 @@ class _ProductPageState extends State<ProductPage> {
                   child: Consumer<ProductFetcher>(
                     builder:
                         (BuildContext context, ProductFetcher notifier, _) {
-                          return switch (notifier.state) {
-                            ProductFetcherLoading() => const ProductPageEmpty(),
-                            ProductFetcherError(error: var erreur) =>
-                              ProductPageError(error: erreur),
-                            ProductFetcherSuccess() => ProductPageBody(),
-                          };
-                        },
+                      return switch (notifier.state) {
+                        ProductFetcherLoading() => const ProductPageEmpty(),
+                        ProductFetcherError(error: var erreur) =>
+                          ProductPageError(error: erreur),
+                        ProductFetcherSuccess() => ProductPageBody(),
+                      };
+                    },
                   ),
                 ),
               ],
@@ -67,22 +119,8 @@ class _ProductPageState extends State<ProductPage> {
               end: 0.0,
               child: _HeaderIcon(
                 icon: _isFavorite ? Icons.star : Icons.star_outline,
-                tooltip: _isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris', //en attendant d'enregistrer les favoris
-                onPressed: () {
-                  setState(() {
-                    _isFavorite = !_isFavorite;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        _isFavorite
-                            ? 'Produit ajouté aux favoris'
-                            : 'Produit retiré des favoris',
-                      ),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                },
+                tooltip: _isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris',
+                onPressed: _toggleFavorite,
               ),
             ),
           ],
@@ -94,7 +132,7 @@ class _ProductPageState extends State<ProductPage> {
 
 class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon({required this.icon, required this.tooltip, this.onPressed})
-    : assert(tooltip.length > 0);
+      : assert(tooltip.length > 0);
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
