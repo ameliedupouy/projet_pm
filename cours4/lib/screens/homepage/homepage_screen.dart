@@ -12,20 +12,47 @@ class HomePage extends StatelessWidget {
     final AppLocalizations localizations = AppLocalizations.of(context)!;
 
     return Scaffold(
+      //header
       appBar: AppBar(
         title: Text(localizations.my_scans_screen_title),
         centerTitle: false,
         actions: <Widget>[
           IconButton(
-            onPressed: () => _onScanButtonPressed(context),
+            //icone favoris
+            icon: const Icon(Icons.star),
+            tooltip: 'Favoris',
+            onPressed: () {
+              context.push('/favorites');
+            },
+          ),
+
+          IconButton(
+            //icone scanner
             icon: Padding(
               padding: const EdgeInsetsDirectional.only(end: 8.0),
               child: Icon(AppIcons.barcode),
             ),
+            tooltip: 'Scanner',
+            onPressed: () {
+              _onScanButtonPressed(context);
+            },
+          ),
+
+          IconButton(
+            //icone deconnexion pas la bonne icone yet
+            icon: const Icon(Icons.arrow_forward),
+            tooltip: 'Déconnexion',
+            onPressed: () {
+              //à faire
+            },
           ),
         ],
       ),
-      body: HomePageEmpty(onScan: () => _onScanButtonPressed(context)),
+      body: HomePageEmpty(
+        onScan: () {
+          _onScanButtonPressed(context);
+        },
+      ),
     );
   }
 
