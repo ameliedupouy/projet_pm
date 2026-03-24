@@ -9,7 +9,7 @@ class PocketBaseService {
   }
 
   PocketBaseService._internal() {
-    client = PocketBase('http://127.0.0.1:8090'); //serveur local 
+    client = PocketBase('http://172.19.236.238:8090'); //serveur local 
   }
 
   Future<List<Map<String, dynamic>>> getRappels() async { //récup les rappels produits

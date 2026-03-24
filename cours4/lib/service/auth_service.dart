@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pocketbase/pocketbase.dart';
 
 class AuthService extends ChangeNotifier {
-  final PocketBase pb = PocketBase('http://192.168.1.13:8090'); //marche avec ip pour l'instant à modifier (mais marche !!)
+  final PocketBase pb = PocketBase('http://172.19.236.238:8090'); //ip à changer pour chaque réseau wifi
   
   bool get isAuthenticated => pb.authStore.isValid; //verif si l'utilisateur est connecté
   String? get userEmail => pb.authStore.record?.getStringValue('email');

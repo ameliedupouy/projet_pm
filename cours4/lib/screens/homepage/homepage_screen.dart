@@ -9,7 +9,6 @@ import 'package:formation_flutter/model/product.dart';
 import 'package:formation_flutter/res/app_colors.dart';
 import 'package:formation_flutter/service/scan_service.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -45,11 +44,17 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.my_scans_screen_title),
+        title: Text(
+          localizations.my_scans_screen_title,
+          style: const TextStyle(
+            color: AppColors.blue, //texte en bleu foncé
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: false,
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.star),
+            icon: const Icon(Icons.star, color: AppColors.blue),
             tooltip: 'Favoris',
             onPressed: () {
               context.push('/favorites');
@@ -58,7 +63,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Padding(
               padding: const EdgeInsetsDirectional.only(end: 8.0),
-              child: Icon(AppIcons.barcode),
+              child: Icon(AppIcons.barcode, color: AppColors.blue),
             ),
             tooltip: 'Scanner',
             onPressed: () {
@@ -68,29 +73,48 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward),
+            icon: const Icon(
+              Icons.exit_to_app,
+              color: AppColors.blue,
+            ), //icône plus ressemblante mais c'est pas encore
             tooltip: 'Déconnexion',
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Déconnexion'),
+                  title: const Text(
+                    'Déconnexion',
+                    style: TextStyle(
+                      //modification de la fenetre pop up pour être plus dans le thème de l'appli
+                      color: AppColors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   content: const Text(
                     'Êtes-vous sûr de vouloir vous déconnecter ?',
+                    style: TextStyle(color: AppColors.grey3),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Annuler'),
-                    ),
-                    TextButton(
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.yellow,
+                        foregroundColor: AppColors.blue,
+                        elevation: 0,
+                        shape: const StadiumBorder(),
+                      ),
                       onPressed: () async {
                         await context.read<AuthService>().logout();
                         if (context.mounted) {
                           context.go('/login');
                         }
                       },
-                      child: const Text('Se déconnecter'),
+                      child: const Text(
+                        'Se déconnecter',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -103,9 +127,7 @@ class _HomePageState extends State<HomePage> {
         future: _scanHistory,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -134,7 +156,8 @@ class _HomePageState extends State<HomePage> {
 
           final scans = snapshot.data ?? [];
 
-          if (scans.isEmpty) { //page vide si pas de scan
+          if (scans.isEmpty) {
+            //page vide si pas de scan
             return HomePageEmpty(
               onScan: () {
                 _onScanButtonPressed(context);
@@ -162,10 +185,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _ScanCard extends StatelessWidget {
-  const _ScanCard({
-    required this.scan,
-    required this.onTap,
-  });
+  const _ScanCard({required this.scan, required this.onTap});
 
   final ScanRecord scan;
   final VoidCallback onTap;
@@ -173,12 +193,12 @@ class _ScanCard extends StatelessWidget {
   Color _getNutriscoreColor(ProductNutriScore? score) {
     return switch (score) {
       ProductNutriScore.A => const Color(0xFF2E7D32),
-      ProductNutriScore.B => const Color(0xFF6FA500), 
+      ProductNutriScore.B => const Color(0xFF6FA500),
       ProductNutriScore.C => const Color(0xFFFFC107),
-      ProductNutriScore.D => const Color(0xFFFF9800), 
-      ProductNutriScore.E => const Color(0xFFC62828), 
-      ProductNutriScore.unknown => const Color(0xFF999999), 
-      null => const Color(0xFF999999), 
+      ProductNutriScore.D => const Color(0xFFFF9800),
+      ProductNutriScore.E => const Color(0xFFC62828),
+      ProductNutriScore.unknown => const Color(0xFF999999),
+      null => const Color(0xFF999999),
     };
   }
 
@@ -202,86 +222,118 @@ class _ScanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.grey1,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: scan.picture != null && scan.picture!.isNotEmpty
-                    ? Image.network(
-                        scan.picture!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.image,
-                              color: AppColors.grey2);
-                        },
-                      )
-                    : const Icon(Icons.image, color: AppColors.grey2),
+        child: Stack(
+          clipBehavior: Clip.none, //pour faire dépasser la photo
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    Text(
-                      scan.productName ?? 'Produit inconnu',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 90), // pour décaler le texte
+                    const SizedBox(width: 12),
 
-                    Text(
-                      _getFirstBrand(),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.grey2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            scan.productName ?? 'Produit inconnu',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
 
-                    Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _getNutriscoreColor(scan.nutriScore),
-                            shape: BoxShape.circle,
+                          Text(
+                            _getFirstBrand(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.grey2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Nutriscore : ${_getNutriscoreLetter(scan.nutriScore)}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.grey2,
+                          const SizedBox(height: 8),
+
+                          Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: _getNutriscoreColor(scan.nutriScore),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Nutriscore : ${_getNutriscoreLetter(scan.nutriScore)}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.blue,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+
+            Positioned(
+              top: -10, //image dépasse
+              left: 13, 
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: scan.picture != null && scan.picture!.isNotEmpty
+                      ? Image.network(scan.picture!, fit: BoxFit.cover)
+                      : Container(
+                          color: AppColors.grey1,
+                          child: const Icon(
+                            Icons.image,
+                            color: AppColors.grey2,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

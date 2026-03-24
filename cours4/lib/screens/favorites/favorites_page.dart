@@ -71,7 +71,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mes favoris'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.blue), //flèche en bleu
+          onPressed: () => context.pop(),
+        ),
+        title: const Text('Mes favoris',
+        style: TextStyle(
+          color: AppColors.blue, //titre en bleu
+          fontWeight: FontWeight.bold,
+        ),
+        ),
       ),
       body: FutureBuilder<List<FavoriteItem>>(
         future: _favorites,
@@ -190,87 +199,123 @@ class _FavoriteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20), //ajout de marge pour le dépassement
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container( //photo du produit
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.grey1,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: favorite.picture != null &&
-                        favorite.picture!.isNotEmpty
-                    ? Image.network(
-                        favorite.picture!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.image,
-                              color: AppColors.grey2);
-                        },
-                      )
-                    : const Icon(Icons.image, color: AppColors.grey2),
+        child: Stack(
+          clipBehavior: Clip.none, //pour faire dépasser la photo
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-
-              Expanded( //info du produit
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    Text(
-                      favorite.productName ?? 'Produit inconnu',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 90), // pour décaler le texte
+                    const SizedBox(width: 12),
 
-                    Text(
-                      _getFirstBrand(),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.grey2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
+                    Expanded( //info du produit
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            favorite.productName ?? 'Produit inconnu',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
 
-                    Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _getNutriscoreColor(favorite.nutriScore),
-                            shape: BoxShape.circle,
+                          Text(
+                            _getFirstBrand(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.grey2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Nutriscore : ${_getNutriscoreLetter(favorite.nutriScore)}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.grey2,
+                          const SizedBox(height: 8),
+
+                          Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: _getNutriscoreColor(favorite.nutriScore),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Nutriscore : ${_getNutriscoreLetter(favorite.nutriScore)}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.blue, // Modifié en bleu pour matcher l'historique
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            Positioned(
+              top: -10, //image dépasse
+              left: 13, 
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: favorite.picture != null && favorite.picture!.isNotEmpty
+                      ? Image.network(
+                          favorite.picture!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: AppColors.grey1,
+                              child: const Icon(Icons.image, color: AppColors.grey2),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: AppColors.grey1,
+                          child: const Icon(Icons.image, color: AppColors.grey2),
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

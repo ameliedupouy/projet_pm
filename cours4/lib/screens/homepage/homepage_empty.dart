@@ -27,6 +27,11 @@ class HomePageEmpty extends StatelessWidget {
                 Text(
                   localizations.my_scans_screen_description,
                   textAlign: TextAlign.center,
+                  style: const TextStyle( //couleur bleu texte
+                    color: AppColors.blue,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 Spacer(flex: 5),
                 FractionallySizedBox(
