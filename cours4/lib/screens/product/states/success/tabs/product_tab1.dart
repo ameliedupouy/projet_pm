@@ -6,98 +6,105 @@ import 'package:provider/provider.dart';
 class ProductTab1 extends StatelessWidget {
   const ProductTab1({super.key});
 
-  static const double _kHorizontalPadding = 20.0;
-
   @override
   Widget build(BuildContext context) {
     final Product product = context.read<Product>();
 
     return SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          _SectionWidget(
+            title: 'Ingrédients',
+            child: _buildIngredientsList(product.ingredients),
+          ),
+
+          _SectionWidget(
+            title: 'Substances allergènes',
+            child: _buildSimpleList(product.allergens, "Aucune"),
+          ),
+
+          _SectionWidget(
+            title: 'Additifs',
+            child: _buildSimpleList(product.additives?.values.toList(), "Aucune"),
+          ),
           
-          if (product.ingredients != null && product.ingredients!.isNotEmpty) //affiche les ingrédients s'ils existent
-            _SectionWidget(
-              title: 'Ingrédients',
-              children: product.ingredients!
-                  .map((ingredient) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          ingredient,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ))
-                  .toList(),
-            ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
 
-          if (product.allergens != null && product.allergens!.isNotEmpty) //affiche les allergènes s'ils existent
-            _SectionWidget(
-              title: 'Substances allergènes',
-              children: product.allergens!
-                  .map((allergen) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          allergen,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ))
-                  .toList(),
-            ),
+  Widget _buildIngredientsList(List<String>? ingredients) {
+    if (ingredients == null || ingredients.isEmpty) {
+      return const _RowItem(label: "Données indisponibles");
+    }
 
-          if (product.traces != null && product.traces!.isNotEmpty) //affiche si existant
-            _SectionWidget(
-              title: 'Traces',
-              children: product.traces!
-                  .map((trace) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          trace,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ))
-                  .toList(),
-            ),
+    return Column(
+      children: [
+        for (int i = 0; i < ingredients.length; i++) ...[
+          _buildIngredientRow(ingredients[i]),
+          if (i < ingredients.length - 1) const _CustomDivider(),
+        ],
+      ],
+    );
+  }
 
-          if (product.additives != null && product.additives!.isNotEmpty) //si existant
-            _SectionWidget(
-              title: 'Additifs',
-              children: product.additives!.entries
-                  .map((entry) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              entry.key.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              entry.value,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.grey2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ))
-                  .toList(),
-            ),
+  Widget _buildIngredientRow(String text) {
+    if (text.contains(':')) {
+      final parts = text.split(':');
+      return _RowItem(label: parts[0].trim(), value: parts[1].trim());
+    }
+    return _RowItem(label: text);
+  }
 
-          if ((product.ingredients == null || product.ingredients!.isEmpty) && //si pas de données : message
-              (product.allergens == null || product.allergens!.isEmpty) &&
-              (product.traces == null || product.traces!.isEmpty) &&
-              (product.additives == null || product.additives!.isEmpty))
-            Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Center(
-                child: Text(
-                  'Aucune données disponible',
-                  style: TextStyle(color: AppColors.grey2),
+  Widget _buildSimpleList(List<String>? items, String emptyLabel) {
+    if (items == null || items.isEmpty) {
+      return _RowItem(label: emptyLabel);
+    }
+    return Column(
+      children: [
+        for (int i = 0; i < items.length; i++) ...[
+          _RowItem(label: items[i]),
+          if (i < items.length - 1) const _CustomDivider(),
+        ],
+      ],
+    );
+  }
+}
+
+
+class _RowItem extends StatelessWidget {
+  final String label;
+  final String? value;
+
+  const _RowItem({required this.label, this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.blue,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          if (value != null)
+            Expanded(
+              child: Text(
+                value!,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: Color(0xFF4A4A4A), //gris foncé lisible
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
@@ -107,39 +114,49 @@ class ProductTab1 extends StatelessWidget {
   }
 }
 
-class _SectionWidget extends StatelessWidget {
-  const _SectionWidget({
-    required this.title,
-    required this.children,
-  });
-
-  final String title;
-  final List<Widget> children;
+class _CustomDivider extends StatelessWidget {
+  const _CustomDivider();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        ProductTab1._kHorizontalPadding,
-        24.0,
-        ProductTab1._kHorizontalPadding,
-        16.0,
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.0),
+      child: Divider(
+        height: 1,
+        thickness: 0.6,
+        color: Color(0xFFEEEEEE),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.blue,
+    );
+  }
+}
+
+class _SectionWidget extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _SectionWidget({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          color: const Color(0xFFF8F8FA),
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          child: Center(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppColors.blue,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          ...children,
-        ],
-      ),
+        ),
+        child,
+      ],
     );
   }
 }

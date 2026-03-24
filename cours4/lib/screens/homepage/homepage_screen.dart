@@ -54,13 +54,6 @@ class _HomePageState extends State<HomePage> {
         centerTitle: false,
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.star, color: AppColors.blue),
-            tooltip: 'Favoris',
-            onPressed: () {
-              context.push('/favorites');
-            },
-          ),
-          IconButton(
             icon: Padding(
               padding: const EdgeInsetsDirectional.only(end: 8.0),
               child: Icon(AppIcons.barcode, color: AppColors.blue),
@@ -70,6 +63,13 @@ class _HomePageState extends State<HomePage> {
               context.push('/scanner').then((_) {
                 _loadHistory();
               });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.star, color: AppColors.blue),
+            tooltip: 'Favoris',
+            onPressed: () {
+              context.push('/favorites');
             },
           ),
           IconButton(

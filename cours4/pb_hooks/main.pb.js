@@ -2,7 +2,7 @@ console.log("fichier chargé");
 
 cronAdd("sync_rappels", "* * * * *", () => { 
 
-    console.log("cron ok");
+    
 
     let collection;
 
@@ -79,5 +79,5 @@ cronAdd("sync_rappels", "* * * * *", () => {
         }
     });
 
-    console.log("synchro ok");
+
 });

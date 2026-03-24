@@ -17,16 +17,19 @@ class ProductTab3 extends StatelessWidget {
 
     return DefaultTextStyle.merge(
       style: TextStyle(color: AppColors.blue),
-      child: Table(
-        border: TableBorder.symmetric(
-          inside: BorderSide(color: AppColors.blue),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15.0),
+        child: Table(
+          border: TableBorder.symmetric(
+            inside: BorderSide(color: AppColors.grey1),
+          ),
+          columnWidths: const <int, TableColumnWidth>{
+            0: FlexColumnWidth(3),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(2),
+          },
+          children: _body(context, product.nutritionFacts!),
         ),
-        columnWidths: const <int, TableColumnWidth>{
-          0: FlexColumnWidth(3),
-          1: FlexColumnWidth(2),
-          2: FlexColumnWidth(2),
-        },
-        children: _body(context, product.nutritionFacts!),
       ),
     );
   }
